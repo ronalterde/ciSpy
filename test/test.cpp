@@ -135,6 +135,22 @@ TEST_F(SignalizerTest, errorBeepIfBuildBroken) {
 	ASSERT_EQ(beeper.lastPlayed, errorTone);
 }
 
+TEST_F(SignalizerTest, noLightChangeOnUnknownBuildState) {
+	LightSetting l{0, 255, 0};
+
+	s.update(BuildResult::OK);
+	ASSERT_EQ(rgbLight.get(), l);
+
+	s.update(BuildResult::DONTKNOW);
+	ASSERT_EQ(rgbLight.get(), l);
+}
+
+TEST_F(SignalizerTest, noErrorBeepOnUnknownBuildState) {
+	s.update(BuildResult::DONTKNOW);
+	BeeperTone noTone;
+	ASSERT_EQ(beeper.lastPlayed, noTone);
+}
+
 class JenkinsBuildResultParserTest : public ::testing::Test {
 };
 
@@ -156,9 +172,19 @@ TEST_F(JenkinsBuildResultParserTest, success) {
 
 TEST_F(JenkinsBuildResultParserTest, fail) {
 	JenkinsBuildResultParser parser;
-	auto failMsg = "anything";
+	auto failMsg =
+		"<job><name>Foo</name><build>\
+			<phase>COMPLETED</phase>\
+			<status>FAILURE</status></build></job>";
 	auto result = parser.parseMsg(failMsg);
 	ASSERT_EQ(result, BuildResult::BROKEN);
+}
+
+TEST_F(JenkinsBuildResultParserTest, dontKnow) {
+	JenkinsBuildResultParser parser;
+	auto failMsg = "anything";
+	auto result = parser.parseMsg(failMsg);
+	ASSERT_EQ(result, BuildResult::DONTKNOW);
 }
 
 class TestKeyValueStore : public KeyValueStore {

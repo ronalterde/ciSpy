@@ -31,7 +31,7 @@ Signalizer::Signalizer(Beeper& beeper, RgbLight& rgbLight) :
 void Signalizer::update(BuildResult buildResult) {
 	if (buildResult == BuildResult::OK) {
 		rgbLight.set(LightSetting{0, 255, 0});
-	} else {
+	} else if (buildResult == BuildResult::BROKEN) {
 		rgbLight.set(LightSetting{255, 0, 0});
 
 		BeeperTone errorTone;
@@ -44,7 +44,9 @@ void Signalizer::update(BuildResult buildResult) {
 BuildResult JenkinsBuildResultParser::parseMsg(const std::string& msg) {
 	if (msg.find("SUCCESS") != std::string::npos)
 		return BuildResult::OK;
-	return BuildResult::BROKEN;
+	else if (msg.find("FAILURE") != std::string::npos)
+		return BuildResult::BROKEN;
+	return BuildResult::DONTKNOW;
 }
 
 StateSaver::StateSaver(KeyValueStore& store, RgbLight& rgbLight) :

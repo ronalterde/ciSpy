@@ -69,7 +69,8 @@ public:
 
 enum class BuildResult {
 	OK,
-	BROKEN
+	BROKEN,
+	DONTKNOW
 };
 
 class Signalizer {
